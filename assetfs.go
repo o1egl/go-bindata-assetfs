@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -135,12 +134,14 @@ type AssetFS struct {
 	AssetDir func(path string) ([]string, error)
 	// AssetInfo should return the info of file in path if exists
 	AssetInfo func(path string) (os.FileInfo, error)
-	// Prefix would be prepended to http requests
-	Prefix string
+	// RewriteFn rewrites asset's name
+	RewriteFn func(string) string
 }
 
 func (fs *AssetFS) Open(name string) (http.File, error) {
-	name = path.Join(fs.Prefix, name)
+	if fs.RewriteFn != nil {
+		name = fs.RewriteFn(name)
+	}
 	if len(name) > 0 && name[0] == '/' {
 		name = name[1:]
 	}
